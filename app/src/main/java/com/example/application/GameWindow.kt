@@ -2,6 +2,7 @@ package com.example.application
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import com.example.application.ui.theme.ApplicationTheme
 import kotlinx.coroutines.delay
 import kotlin.random.Random
@@ -76,14 +78,11 @@ fun simulateCpuTurn(initialCpuDice: List<Int>): Pair<List<Int>, Int> {
     var cumulativeScore = dice.sum()
     // Computer has up to 2 optional re-rolls (i.e. total of 3 rolls maximum).
     while (rollCount < 3) {
-        // Random decision: true means computer opts for a re-roll at this opportunity.
         if (!Random.nextBoolean()) {
             break  // Computer decides not to re-roll further.
         }
-        // For each die, decide randomly whether to re-roll.
         var added = 0
         val updatedDice = dice.map { oldValue ->
-            // Random decision per die: if true, re-roll this die.
             if (Random.nextBoolean()) {
                 val newValue = (1..6).random()
                 added += newValue
@@ -142,17 +141,18 @@ fun GameView() {
                 currentWinner = "Player Wins!"
             } else if (cpuTotal >= finalTarget!!) {
                 currentWinner = "CPU Wins!"
+            } else {
+                // No winner reached; reset turn state immediately.
+                playerDice = rollPlayerDice()
+                cpuDice = rollDice()
+                humanRollCount = 0
+                humanTurnScore = 0
             }
-            delay(2000)
-            // Reset for next turn.
-            playerDice = rollPlayerDice()
-            cpuDice = rollDice() // New CPU dice for next turn.
-            humanRollCount = 0
-            humanTurnScore = 0
         }
     }
 
     Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        // Main content.
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -172,9 +172,8 @@ fun GameView() {
                 ) {
                     Text("Set Target", fontSize = 22.sp)
                 }
-            } else {
-                Text("Target Score: $finalTarget", fontSize = 24.sp, modifier = Modifier.padding(bottom = 8.dp))
             }
+            // (The target score is no longer displayed in the middle)
 
             // Display human player's dice (selectable).
             Text("Player's Dice", fontSize = 24.sp, modifier = Modifier.padding(bottom = 8.dp))
@@ -250,52 +249,49 @@ fun GameView() {
                 }
             }
 
-            // Display winner announcement (inline, if any).
-            if (currentWinner != null) {
-                val announcementColor = if (currentWinner!!.contains("Player")) Color.Green else Color.Red
-                Text(
-                    currentWinner!!,
-                    fontSize = 26.sp,
-                    color = announcementColor,
-                    modifier = Modifier.padding(top = 16.dp)
-                )
-            }
+
         }
-        // Top-right scoreboard overlay.
-        Column(
-            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
-            horizontalAlignment = Alignment.End
+        // Top-left scoreboard overlay for player and CPU scores.
+        Row(
+            modifier = Modifier.align(Alignment.TopStart).padding(10.dp)
         ) {
-            Text("Player Score: $playerTotal", fontSize = 20.sp)
-            Text("CPU Score: $cpuTotal", fontSize = 20.sp)
+            Text("H: $playerTotal", fontSize = 20.sp)
+            Text(" /C: $cpuTotal", fontSize = 20.sp)
+        }
+        // Top-right target overlay.
+        if (finalTarget != null) {
+            Text(
+                "Target Score: $finalTarget",
+                fontSize = 20.sp,
+                modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+            )
         }
     }
 
-    // Winner pop-up AlertDialog.
+    // Winner pop-up AlertDialog with no confirm button.
     if (currentWinner != null) {
-        val winMessage = if (currentWinner!!.contains("Player")) "You win!" else "You lose"
+        val mainMessage = if (currentWinner!!.contains("Player")) "You win!" else "You lose."
+        val instructionMessage = "To start a new game, please press the Android Back button and then click New Game."
         val winColor = if (currentWinner!!.contains("Player")) Color.Green else Color.Red
+        val activity = LocalActivity.current
         AlertDialog(
-            onDismissRequest = { /* Disable dismiss on outside touch */ },
+            onDismissRequest = { activity?.finish() },
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false
+            ),
             title = { Text("Game Over", fontSize = 24.sp) },
-            text = { Text(winMessage, fontSize = 20.sp, color = winColor) },
-            confirmButton = {
-
-            }
+            text = {
+                Column {
+                    Text(text = mainMessage, fontSize = 28.sp, color = winColor)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = instructionMessage, fontSize = 16.sp, color = Color.Black)
+                }
+            },
+            confirmButton = { }
         )
     }
 
-    // Reset entire game state after a winner is declared.
-    LaunchedEffect(currentWinner) {
-        if (currentWinner != null) {
-            delay(2000)
-            playerDice = rollPlayerDice()
-            cpuDice = rollDice()
-            playerTotal = 0
-            cpuTotal = 0
-            currentWinner = null
-        }
-    }
 }
 
 @Composable
