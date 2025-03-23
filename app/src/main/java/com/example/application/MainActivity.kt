@@ -39,8 +39,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ApplicationTheme {
-             MainScreen( onNavigateToGameScreen = {
-                 startActivity(Intent(this, GameScreen::class.java))
+             MainScreen( onNavigateToGameWindow = {
+                 startActivity(Intent(this, GameWindow::class.java))
              })
             }
         }
@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(onNavigateToGameScreen:()->Unit) {
+fun MainScreen(onNavigateToGameWindow:()->Unit) {
     var showDialog by remember { mutableStateOf(false) }
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -80,7 +80,7 @@ fun MainScreen(onNavigateToGameScreen:()->Unit) {
 
                 //New game button
                 Button(
-                    onClick = { onNavigateToGameScreen()/* Handle new game action */ },
+                    onClick = { onNavigateToGameWindow()/* Handle new game action */ },
                     modifier = Modifier
                         .width(450.dp)
                         .padding(top = 600.dp),
