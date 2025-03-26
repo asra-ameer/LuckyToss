@@ -133,7 +133,7 @@ fun AboutDialog(showDialog: Boolean, onDismiss: () -> Unit) {
             onDismissRequest = onDismiss,
             title = { Text(text = "About",fontFamily = customFontFamilyGaming,fontSize = 22.sp) },
             text = {
-                Text("StudentID: w2055319 / 20232437 \nName: Asra Ameer\nI confirm that I understand what plagiarism is and have read and understood the section on Assessment Offences in the Essential Information for Students. The work that I have submitted is entirely my own. Any work from other authors is duly referenced and acknowledged."
+                Text("StudentID: w2055319 / 20232437 \nName: Asra Ameer\n\nI confirm that I understand what plagiarism is and have read and understood the section on Assessment Offences in the Essential Information for Students. The work that I have submitted is entirely my own. Any work from other authors is duly referenced and acknowledged."
                     ,fontFamily = customFontFamilyGaming,fontSize = 15.sp,
                     textAlign = TextAlign.Justify)
             },
